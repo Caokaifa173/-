@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+{% if user %}
+<div class="card">
+    <h2>欢迎回来，{{ user.username }}！</h2>
+    <ul class="user-info">
+        <li><span class="label">用户名</span><span class="value">{{ user.username }}</span></li>
+        <li><span class="label">密码</span><span class="value">{{ user.password }}</span></li>
+        <li><span class="label">邮箱</span><span class="value">{{ user.email }}</span></li>
+        <li><span class="label">手机</span><span class="value">{{ user.phone }}</span></li>
+        <li><span class="label">角色</span><span class="value">{{ user.role }}</span></li>
+        <li><span class="label">余额</span><span class="value">{{ user.balance }}</span></li>
+    </ul>
+
+    <h3 style="margin-top: 25px; margin-bottom: 15px; color: #667eea;">🔍 搜索用户</h3>
+    <form method="get" action="/">
+        <div style="display: flex; gap: 10px;">
+            <input type="text" name="keyword" placeholder="输入用户名或邮箱关键词" value="{{ keyword }}" style="flex: 1; padding: 10px 14px; border: 1px solid #d0d0d0; border-radius: 6px; font-size: 1em; outline: none;">
+            <button type="submit" class="btn" style="margin-top: 0;">搜索</button>
+        </div>
+    </form>
+
+    {% if searched %}
+        {% if results %}
+        <table class="result-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>用户名</th>
+                    <th>邮箱</th>
+                    <th>手机号</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for row in results %}
+                <tr>
+                    <td>{{ row.id }}</td>
+                    <td>{{ row.username }}</td>
+                    <td>{{ row.email }}</td>
+                    <td>{{ row.phone }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="text-align: center; padding: 30px; color: #999;">😿 无搜索结果</div>
+        {% endif %}
+    {% endif %}
+
+    <a href="/logout" class="btn" style="margin-top: 20px;">退出登录</a>
+</div>
+{% else %}
+<div class="card center">
+    <h2>请先登录</h2>
+    <p style="margin: 20px 0; color: #666;">您尚未登录，请先登录以访问用户信息。</p>
+    <a href="/login" class="btn">前往登录</a>
+</div>
+{% endif %}
+{% endblock %}
