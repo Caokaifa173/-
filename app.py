@@ -58,14 +58,16 @@ def index():
     searched = bool(keyword)
 
     if keyword:
-        sql = f"SELECT id, username, email, phone FROM users WHERE username LIKE '%{keyword}%' OR email LIKE '%{keyword}%'"
-        print(f"[SQL] {sql}")
+        # ✅ 修复：使用参数化查询替代 f-string 拼接，防止 SQL 注入
+        like_pattern = f"%{keyword}%"
         conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row
-        c = conn.cursor()
         try:
-            c.execute(sql)
-            results = [dict(row) for row in c.fetchall()]
+            rows = conn.execute(
+                "SELECT id, username, email, phone FROM users WHERE username LIKE ? OR email LIKE ?",
+                (like_pattern, like_pattern)
+            ).fetchall()
+            results = [dict(row) for row in rows]
         except Exception as e:
             print(f"[SQL ERROR] {e}")
             results = []
@@ -95,12 +97,13 @@ def register():
         password = request.form.get("password", "")
         email = request.form.get("email", "")
         phone = request.form.get("phone", "")
-        sql = f"INSERT INTO users (username, password, email, phone) VALUES ('{username}', '{password}', '{email}', '{phone}')"
-        print(f"[SQL] {sql}")
+        # ✅ 修复：使用参数化查询替代 f-string 拼接，防止 SQL 注入
         conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
         try:
-            c.execute(sql)
+            conn.execute(
+                "INSERT INTO users (username, password, email, phone) VALUES (?, ?, ?, ?)",
+                (username, password, email, phone)
+            )
             conn.commit()
             conn.close()
             return redirect("/login?registered=1")
