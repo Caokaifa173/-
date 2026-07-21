@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <h2>📤 上传头像</h2>
+    <p style="margin-bottom: 20px; color: #888; font-size: 0.9em;">
+        支持的格式：任意文件类型（最大 16MB）
+    </p>
+
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="file">选择文件</label>
+            <input type="file" name="file" id="file" style="padding: 8px 0;">
+        </div>
+        <button type="submit" class="btn">上传</button>
+    </form>
+
+    {% if result %}
+    <hr style="margin: 25px 0; border: none; border-top: 1px solid #f0f0f0;">
+    <div style="text-align: center;">
+        <h3 style="color: #27ae60; margin-bottom: 15px;">✅ 上传成功！</h3>
+        <div style="max-width: 200px; margin: 0 auto 15px; border: 2px solid #f0f0f0; border-radius: 10px; overflow: hidden;">
+            <img src="{{ result.url }}" alt="头像预览" style="width: 100%; display: block;">
+        </div>
+        <p style="font-size: 0.85em; color: #666; word-break: break-all;">
+            文件名：<code>{{ result.filename }}</code><br>
+            大小：{{ (result.size / 1024) | round(1) }} KB<br>
+            <a href="{{ result.url }}" target="_blank" style="color: #667eea;">🔗 打开文件</a>
+        </p>
+    </div>
+    {% endif %}
+
+    <a href="/" class="btn" style="margin-top: 20px; background: #999;">← 返回首页</a>
+</div>
+{% endblock %}

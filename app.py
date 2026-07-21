@@ -1,8 +1,17 @@
 import sqlite3, os
-from flask import Flask, render_template, request, redirect, session
+from flask import Flask, render_template, request, redirect, session, url_for
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = "dev-key-2025"
+
+# ========== 新增配置：文件上传 ==========
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16MB
+UPLOAD_FOLDER = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "static", "uploads"
+)
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+# ==========================================
 
 USERS = {
     "admin": {
@@ -11,7 +20,7 @@ USERS = {
         "role": "admin",
         "email": "admin@example.com",
         "phone": "13800138000",
-        "balance": 99999
+        "balance": 99999,
     },
     "alice": {
         "username": "alice",
@@ -19,11 +28,13 @@ USERS = {
         "role": "user",
         "email": "alice@example.com",
         "phone": "13900139001",
-        "balance": 100
-    }
+        "balance": 100,
+    },
 }
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "users.db")
+DB_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "data", "users.db"
+)
 
 
 def init_db():
@@ -41,8 +52,12 @@ def init_db():
         )
         """
     )
-    c.execute("INSERT OR IGNORE INTO users (username, password, email, phone) VALUES ('admin', '***', 'admin@example.com', '13800138000')")
-    c.execute("INSERT OR IGNORE INTO users (username, password, email, phone) VALUES ('alice', 'alice2025', 'alice@example.com', '13900139001')")
+    c.execute(
+        "INSERT OR IGNORE INTO users (username, password, email, phone) VALUES ('admin', '***', 'admin@example.com', '13800138000')"
+    )
+    c.execute(
+        "INSERT OR IGNORE INTO users (username, password, email, phone) VALUES ('alice', 'alice2025', 'alice@example.com', '13900139001')"
+    )
     conn.commit()
     conn.close()
     print(f"[init_db] Database initialized at {DB_PATH}")
@@ -59,14 +74,13 @@ def index():
     searched = bool(keyword)
 
     if keyword:
-        # ✅ 修复 SQL 注入 — 参数化查询
         like_pattern = f"%{keyword}%"
         conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row
         try:
             rows = conn.execute(
                 "SELECT id, username, email, phone FROM users WHERE username LIKE ? OR email LIKE ?",
-                (like_pattern, like_pattern)
+                (like_pattern, like_pattern),
             ).fetchall()
             results = [dict(row) for row in rows]
         except Exception as e:
@@ -74,7 +88,9 @@ def index():
             results = []
         conn.close()
 
-    return render_template("index.html", user=user, results=results, keyword=keyword, searched=searched)
+    return render_template(
+        "index.html", user=user, results=results, keyword=keyword, searched=searched
+    )
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -100,12 +116,11 @@ def register():
         password = request.form.get("password", "")
         email = request.form.get("email", "")
         phone = request.form.get("phone", "")
-        # ✅ 修复 SQL 注入 — 参数化查询
         conn = sqlite3.connect(DB_PATH)
         try:
             conn.execute(
                 "INSERT INTO users (username, password, email, phone) VALUES (?, ?, ?, ?)",
-                (username, password, email, phone)
+                (username, password, email, phone),
             )
             conn.commit()
             conn.close()
@@ -115,6 +130,42 @@ def register():
             conn.close()
             return render_template("register.html", error=f"注册失败: {e}")
     return render_template("register.html")
+
+
+# ========== 新增路由：头像上传 ==========
+@app.route("/upload", methods=["GET", "POST"])
+def upload():
+    """头像上传页面：登录用户可上传任意文件"""
+    if "username" not in session:
+        return redirect("/login")
+
+    user = USERS.get(session["username"])
+    result = None
+    error = None
+
+    if request.method == "POST":
+        if "file" not in request.files:
+            error = "没有选择文件"
+        else:
+            f = request.files["file"]
+            if f.filename == "":
+                error = "文件名为空"
+            else:
+                # ⚠️ 漏洞：使用原始文件名保存，不做类型检查
+                filename = f.filename
+                save_path = os.path.join(UPLOAD_FOLDER, filename)
+                f.save(save_path)
+                file_url = url_for("static", filename=f"uploads/{filename}")
+                result = {
+                    "filename": filename,
+                    "url": file_url,
+                    "size": os.path.getsize(save_path),
+                }
+
+    return render_template("upload.html", user=user, result=result, error=error)
+
+
+# ==========================================
 
 
 @app.route("/logout")
