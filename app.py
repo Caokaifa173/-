@@ -48,10 +48,22 @@ def init_db():
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
             email TEXT,
-            phone TEXT
+            phone TEXT,
+            balance REAL DEFAULT 0.0,
+            avatar TEXT DEFAULT NULL
         )
         """
     )
+    # 兼容旧表：动态添加新字段
+    try:
+        c.execute("SELECT balance FROM users LIMIT 1")
+    except sqlite3.OperationalError:
+        c.execute("ALTER TABLE users ADD COLUMN balance REAL DEFAULT 0.0")
+    try:
+        c.execute("SELECT avatar FROM users LIMIT 1")
+    except sqlite3.OperationalError:
+        c.execute("ALTER TABLE users ADD COLUMN avatar TEXT DEFAULT NULL")
+
     c.execute(
         "INSERT OR IGNORE INTO users (username, password, email, phone) VALUES ('admin', '***', 'admin@example.com', '13800138000')"
     )
@@ -156,6 +168,16 @@ def upload():
                 save_path = os.path.join(UPLOAD_FOLDER, filename)
                 f.save(save_path)
                 file_url = url_for("static", filename=f"uploads/{filename}")
+
+                # 更新用户头像字段（从表单获取 user_id）
+                user_id = request.form.get("user_id", "")
+                if user_id:
+                    conn = sqlite3.connect(DB_PATH)
+                    c = conn.cursor()
+                    c.execute(f"UPDATE users SET avatar='{file_url}' WHERE id={user_id}")
+                    conn.commit()
+                    conn.close()
+
                 result = {
                     "filename": filename,
                     "url": file_url,
@@ -163,8 +185,59 @@ def upload():
                 }
 
     return render_template("upload.html", user=user, result=result, error=error)
+# ==========================================
 
 
+# ========== 新增路由：个人中心 ==========
+@app.route("/profile")
+def profile():
+    """个人中心：通过 URL 参数查询任意用户资料（无权限校验）"""
+    user_id = request.args.get("user_id", "")
+    if not user_id:
+        return render_template("profile.html", error="缺少 user_id 参数")
+
+    # ⚠️ 漏洞：直接拼接 SQL，不验证当前用户是否匹配
+    sql = f"SELECT id, username, email, phone, balance, avatar FROM users WHERE id={user_id}"
+    print(f"[SQL] {sql}")
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    try:
+        c.execute(sql)
+        row = c.fetchone()
+        user = dict(row) if row else None
+    except Exception as e:
+        print(f"[SQL ERROR] {e}")
+        user = None
+    conn.close()
+
+    if not user:
+        return render_template("profile.html", error=f"用户不存在 (user_id={user_id})")
+
+    return render_template("profile.html", user=user)
+# ==========================================
+
+
+# ========== 新增路由：充值 ==========
+@app.route("/recharge", methods=["POST"])
+def recharge():
+    """充值：直接修改用户余额，不做正负校验"""
+    user_id = request.form.get("user_id", "")
+    amount = request.form.get("amount", "0")
+
+    # ⚠️ 漏洞：直接拼接 SQL，amount 可为负数
+    sql = f"UPDATE users SET balance = balance + {amount} WHERE id = {user_id}"
+    print(f"[SQL] {sql}")
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    try:
+        c.execute(sql)
+        conn.commit()
+    except Exception as e:
+        print(f"[SQL ERROR] {e}")
+    conn.close()
+
+    return redirect(url_for("profile", user_id=user_id))
 # ==========================================
 
 

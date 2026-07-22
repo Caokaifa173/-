@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <h2>👤 个人中心</h2>
+
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% else %}
+    <table class="result-table">
+        <tr><th style="width:120px">用户 ID</th><td>{{ user.id }}</td></tr>
+        <tr><th>用户名</th><td>{{ user.username }}</td></tr>
+        <tr><th>邮箱</th><td>{{ user.email or '未设置' }}</td></tr>
+        <tr><th>手机号</th><td>{{ user.phone or '未设置' }}</td></tr>
+        <tr><th>余额</th><td>¥{{ user.balance or '0.00' }}</td></tr>
+        <tr><th>头像</th><td>
+            {% if user.avatar %}
+                <img src="{{ user.avatar }}" alt="avatar" style="max-width:120px; border-radius:8px;">
+            {% else %}
+                未设置
+            {% endif %}
+        </td></tr>
+    </table>
+
+    <h3 style="margin-top:25px;">💰 充值</h3>
+    <form method="post" action="/recharge">
+        <input type="hidden" name="user_id" value="{{ user.id }}">
+        <div class="form-group">
+            <label for="amount">充值金额</label>
+            <input type="text" id="amount" name="amount" placeholder="请输入充值金额" value="100">
+        </div>
+        <button type="submit" class="btn">充 值</button>
+    </form>
+    {% endif %}
+
+    <a href="/" class="btn" style="margin-top: 20px; background: #999;">← 返回首页</a>
+</div>
+{% endblock %}
