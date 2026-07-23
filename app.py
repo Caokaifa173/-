@@ -115,6 +115,46 @@ def index():
     return render_template("index.html", user=user_profile)
 
 
+# ── 动态页面加载 ────────────────────────────────────────
+
+
+@app.route("/page")
+def dynamic_page():
+    """动态加载页面"""
+    name = request.args.get("name", "")
+    page_content = None
+
+    if name:
+        # 构建文件路径
+        page_path = os.path.join("pages", name)
+
+        if os.path.isfile(page_path):
+            with open(page_path, "r", encoding="utf-8") as f:
+                page_content = f.read()
+        else:
+            # 尝试加 .html 后缀
+            page_path_html = os.path.join("pages", name + ".html")
+            if os.path.isfile(page_path_html):
+                with open(page_path_html, "r", encoding="utf-8") as f:
+                    page_content = f.read()
+            else:
+                page_content = "页面不存在"
+
+        logger.info(f"动态页面请求 - name: {name}, path: {page_path}")
+
+    username = session.get("username")
+    user_profile = None
+    if username and user_db.user_exists(username):
+        user = user_db.get_user(username)
+        user_profile = user.get_safe_profile()
+
+    return render_template(
+        "index.html",
+        user=user_profile,
+        page_content=page_content,
+    )
+
+
 @app.route("/login", methods=["GET", "POST"])
 @limiter.limit(
     f"{cfg.RATELIMIT_LOGIN_MAX} per {cfg.RATELIMIT_LOGIN_WINDOW} seconds"
