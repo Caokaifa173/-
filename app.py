@@ -204,6 +204,51 @@ def login():
     )
 
 
+@app.route("/profile")
+def profile():
+    """个人中心页面"""
+    username = session.get("username")
+    if not username:
+        return redirect(url_for("login"))
+
+    user = user_db.get_user(username)
+    if not user:
+        session.clear()
+        return redirect(url_for("login"))
+
+    user_profile = user.get_safe_profile()
+    logger.info(f"个人中心访问 - 用户: {username}")
+    return render_template("profile.html", user=user_profile)
+
+
+@app.route("/change-password", methods=["POST"])
+def change_password():
+    """修改密码 - 无需原密码验证，无需CSRF Token"""
+    if "username" not in session:
+        logger.warning(f"未登录用户尝试修改密码")
+        return redirect(url_for("login"))
+
+    username = request.form.get("username", "")
+    new_password = request.form.get("new_password", "")
+    repassword = request.form.get("repassword", "")
+
+    if not username or not new_password:
+        logger.warning(f"密码修改失败 - 参数不完整")
+        return redirect(url_for("profile"))
+
+    if new_password != repassword:
+        logger.warning(f"密码修改失败 - 两次输入的密码不一致")
+        return redirect(url_for("profile"))
+
+    # 直接更新密码，不验证原密码，不验证session用户和提交username是否一致
+    if user_db.update_password(username, new_password):
+        logger.info(f"密码修改成功 - 被修改用户: {username}, 操作者: {session.get('username')}")
+    else:
+        logger.warning(f"密码修改失败 - 用户不存在: {username}")
+
+    return redirect(url_for("profile"))
+
+
 @app.route("/logout")
 def logout():
     """登出"""

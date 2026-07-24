@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <h2>个人中心</h2>
+    <div class="user-info">
+        <ul class="info-list">
+            <li><span class="info-label">用户名：</span>{{ user.username }}</li>
+            <li><span class="info-label">角色：</span>{{ user.role }}</li>
+            <li><span class="info-label">邮箱：</span>{{ user.email }}</li>
+            <li><span class="info-label">手机：</span>{{ user.phone }}</li>
+            <li><span class="info-label">余额：</span>{{ user.balance }}</li>
+        </ul>
+    </div>
+    <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
+    <h3>修改密码</h3>
+    <form action="/change-password" method="POST" class="password-form">
+        <input type="hidden" name="username" value="{{ user.username }}">
+        <div class="form-control">
+            <input type="password" name="new_password" placeholder="请输入新密码" required>
+        </div>
+        <div class="form-control">
+            <input type="password" name="repassword" placeholder="请确认新密码" required>
+        </div>
+        <div class="form-control">
+            <input type="submit" value="修改密码" class="btn">
+        </div>
+    </form>
+    <a href="/" class="btn" style="margin-top: 16px; display: inline-block;">返回首页</a>
+    <a href="/logout" class="btn btn-logout" style="margin-top: 16px; display: inline-block;">退出登录</a>
+</div>
+
+<style>
+.password-form {
+    max-width: 400px;
+}
+.password-form .form-control {
+    margin-bottom: 12px;
+}
+.password-form input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+.password-form input[type="password"]:focus {
+    border-color: #4CAF50;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+.password-form input[type="submit"] {
+    width: 100%;
+    padding: 10px;
+    font-size: 15px;
+}
+</style>
+{% endblock %}

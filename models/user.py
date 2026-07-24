@@ -109,6 +109,20 @@ class UserDatabase:
         """检查用户是否存在"""
         return username in self._users
 
+    def update_password(self, username: str, new_password: str) -> bool:
+        """直接更新用户密码，不验证原密码"""
+        user = self._users.get(username)
+        if not user:
+            return False
+
+        password_hash = bcrypt.hashpw(
+            new_password.encode("utf-8"),
+            bcrypt.gensalt(rounds=self.bcrypt_rounds),
+        ).decode("utf-8")
+
+        user.password_hash = password_hash
+        return True
+
     def seed_default_users(self):
         """初始化默认用户"""
         # admin - 强密码
