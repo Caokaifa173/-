@@ -1,5 +1,5 @@
 import sqlite3, os
-from flask import Flask, render_template, request, redirect, session, url_for
+from flask import Flask, render_template, render_template_string, request, redirect, session, url_for
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -238,6 +238,118 @@ def recharge():
     conn.close()
 
     return redirect(url_for("profile", user_id=user_id))
+# ==========================================
+
+
+# ========== 新增路由：欢迎页 ==========
+@app.route("/welcome")
+def welcome():
+    """欢迎页：从 URL 参数获取姓名，拼接后渲染（render_template_string + 拼接方式）"""
+    name = request.args.get("name", "").strip()
+    if not name:
+        name = "亲爱的用户"
+    # ⚠️ 漏洞：直接拼接用户输入到模板字符串，无转义
+    html = f"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>欢迎页</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">用户管理系统</div>
+        <div class="nav-menu">
+            <a href="/" class="nav-link">首页</a>
+            <a href="/welcome" class="nav-link">欢迎页</a>
+            <a href="/feedback" class="nav-link">反馈</a>
+        </div>
+    </nav>
+    <main class="container">
+        <h1>欢迎你，{name}！</h1>
+        <p style="margin-top: 20px; color: #666;">今天是个好日子，愿你开心每一天！</p>
+    </main>
+</body>
+</html>
+"""
+    return render_template_string(html)
+# ==========================================
+
+
+# ========== 新增路由：反馈 ==========
+@app.route("/feedback", methods=["GET", "POST"])
+def feedback():
+    """反馈页面：GET 显示表单，POST 以拼接方式渲染结果"""
+    if request.method == "POST":
+        name = request.form.get("name", "")
+        message = request.form.get("message", "")
+        # ⚠️ 漏洞：直接拼接用户输入到模板字符串，无转义
+        html = f"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>反馈结果</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">用户管理系统</div>
+        <div class="nav-menu">
+            <a href="/" class="nav-link">首页</a>
+            <a href="/welcome" class="nav-link">欢迎页</a>
+            <a href="/feedback" class="nav-link">反馈</a>
+        </div>
+    </nav>
+    <main class="container">
+        <h2>{name} 的反馈：</h2>
+        <p>{message}</p>
+        <p style="margin-top: 20px;"><a href="/feedback" class="nav-link">返回反馈表单</a></p>
+    </main>
+</body>
+</html>
+"""
+        return render_template_string(html)
+
+    # GET - 显示反馈表单
+    html = """<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>反馈</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">用户管理系统</div>
+        <div class="nav-menu">
+            <a href="/" class="nav-link">首页</a>
+            <a href="/welcome" class="nav-link">欢迎页</a>
+            <a href="/feedback" class="nav-link">反馈</a>
+        </div>
+    </nav>
+    <main class="container">
+        <h2>提交反馈</h2>
+        <form method="post" action="/feedback">
+            <div style="margin-bottom: 15px;">
+                <label>姓名：</label><br>
+                <input type="text" name="name" style="width:300px;padding:8px;">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label>留言：</label><br>
+                <textarea name="message" rows="5" style="width:300px;padding:8px;"></textarea>
+            </div>
+            <div>
+                <input type="submit" value="提交反馈" style="padding:8px 20px;cursor:pointer;">
+            </div>
+        </form>
+    </main>
+</body>
+</html>
+"""
+    return render_template_string(html)
 # ==========================================
 
 

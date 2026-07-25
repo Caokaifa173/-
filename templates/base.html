@@ -10,6 +10,9 @@
     <nav class="navbar">
         <div class="nav-brand">用户管理系统</div>
         <div class="nav-menu">
+            <a href="/" class="nav-link">首页</a>
+            <a href="/welcome" class="nav-link">欢迎页</a>
+            <a href="/feedback" class="nav-link">反馈</a>
             {% if session.get('username') %}
                 <span class="nav-welcome">欢迎，{{ session.get('username') }}</span>
                 <a href="/upload" class="nav-link">上传头像</a>
