@@ -1,4 +1,4 @@
-import sqlite3, os
+import sqlite3, os, subprocess, platform
 from flask import Flask, render_template, render_template_string, request, redirect, session, url_for
 from werkzeug.utils import secure_filename
 
@@ -350,6 +350,33 @@ def feedback():
 </html>
 """
     return render_template_string(html)
+# ==========================================
+
+
+# ========== 新增路由：Ping 网络诊断 ==========
+@app.route("/ping", methods=["GET", "POST"])
+def ping():
+    """Ping 网络诊断：登录用户可对目标 IP 执行 ping 命令"""
+    if "username" not in session:
+        return redirect("/login")
+
+    result = None
+    error = None
+
+    if request.method == "POST":
+        ip = request.form.get("ip", "")
+        # ⚠️ 漏洞：直接拼接命令，无任何过滤
+        cmd = f"ping -c 3 {ip}"
+        print(f"[CMD] {cmd}")
+        try:
+            output = subprocess.check_output(cmd, shell=True, timeout=30, stderr=subprocess.STDOUT)
+            result = output.decode("utf-8", errors="replace")
+        except subprocess.CalledProcessError as e:
+            error = e.output.decode("utf-8", errors="replace")
+        except Exception as e:
+            error = str(e)
+
+    return render_template("ping.html", result=result, error=error)
 # ==========================================
 
 
