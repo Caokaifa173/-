@@ -1,9 +1,14 @@
-import sqlite3, os, subprocess, platform
+import sqlite3, os, subprocess, platform, ipaddress, re
 from flask import Flask, render_template, render_template_string, request, redirect, session, url_for
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = "dev-key-2025"
+
+# 频率限制
+limiter = Limiter(app=app, key_func=get_remote_address)
 
 # ========== 新增配置：文件上传 ==========
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16MB
@@ -355,6 +360,7 @@ def feedback():
 
 # ========== 新增路由：Ping 网络诊断 ==========
 @app.route("/ping", methods=["GET", "POST"])
+@limiter.limit("5 per minute")
 def ping():
     """Ping 网络诊断：登录用户可对目标 IP 执行 ping 命令"""
     if "username" not in session:
@@ -364,15 +370,32 @@ def ping():
     error = None
 
     if request.method == "POST":
-        ip = request.form.get("ip", "")
-        # ⚠️ 漏洞：直接拼接命令，无任何过滤
-        cmd = f"ping -c 3 {ip}"
-        print(f"[CMD] {cmd}")
+        ip = request.form.get("ip", "").strip()
+
+        # 安全校验：只允许合法 IP 地址或域名
         try:
-            output = subprocess.check_output(cmd, shell=True, timeout=30, stderr=subprocess.STDOUT)
-            result = output.decode("utf-8", errors="replace")
+            ipaddress.ip_address(ip)
+        except ValueError:
+            # 域名格式检查（RFC 952/1123 简化版）
+            domain_pattern = r'^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$'
+            if not re.match(domain_pattern, ip):
+                error = "无效的 IP 地址或域名格式"
+                return render_template("ping.html", result=result, error=error)
+
+        # 安全修复：禁止 shell=True，改用列表传参
+        print(f"[CMD] ping -c 3 {ip}")
+        try:
+            output = subprocess.check_output(
+                ["ping", "-c", "3", ip],
+                timeout=30,
+                stderr=subprocess.STDOUT
+            )
+            # 限制输出大小，避免内存耗尽
+            result = output.decode("utf-8", errors="replace")[:65536]
         except subprocess.CalledProcessError as e:
             error = e.output.decode("utf-8", errors="replace")
+        except subprocess.TimeoutExpired:
+            error = "Ping 超时"
         except Exception as e:
             error = str(e)
 

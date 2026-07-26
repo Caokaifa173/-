@@ -1,0 +1,95 @@
+{
+  "target": "http://ssti.ctfstu.uk:1685",
+  "timestamp": "2026-07-24 23:47:21",
+  "total_routes": 28,
+  "vulnerable_routes": 17,
+  "total_payloads": 391,
+  "successful_payloads": 141,
+  "vulnerable_details": [
+    {
+      "route": "/flasklab/level/1",
+      "successful_payloads": 19,
+      "total_payloads": 23
+    },
+    {
+      "route": "/flasklab/level/2",
+      "successful_payloads": 3,
+      "total_payloads": 23
+    },
+    {
+      "route": "/flasklab/level/3",
+      "successful_payloads": 2,
+      "total_payloads": 23
+    },
+    {
+      "route": "/flasklab/level/4",
+      "successful_payloads": 14,
+      "total_payloads": 23
+    },
+    {
+      "route": "/flasklab/level/5",
+      "successful_payloads": 8,
+      "total_payloads": 23
+    },
+    {
+      "route": "/flasklab/level/6",
+      "successful_payloads": 8,
+      "total_payloads": 23
+    },
+    {
+      "route": "/flasklab/level/7",
+      "successful_payloads": 13,
+      "total_payloads": 23
+    },
+    {
+      "route": "/flasklab/level/8",
+      "successful_payloads": 8,
+      "total_payloads": 23
+    },
+    {
+      "route": "/flasklab/level/9",
+      "successful_payloads": 15,
+      "total_payloads": 23
+    },
+    {
+      "route": "/flasklab/level/10",
+      "successful_payloads": 16,
+      "total_payloads": 23
+    },
+    {
+      "route": "/flasklab/level/11",
+      "successful_payloads": 6,
+      "total_payloads": 23
+    },
+    {
+      "route": "/flasklab/level/12",
+      "successful_payloads": 4,
+      "total_payloads": 23
+    },
+    {
+      "route": "/flasklab/level/13",
+      "successful_payloads": 3,
+      "total_payloads": 23
+    },
+    {
+      "route": "/flaskBasedTests/jinja2/",
+      "successful_payloads": 6,
+      "total_payloads": 6
+    },
+    {
+      "route": "/flaskBasedTests/mako/",
+      "successful_payloads": 4,
+      "total_payloads": 5
+    },
+    {
+      "route": "/flaskBasedTests/resultOtherPage/",
+      "successful_payloads": 6,
+      "total_payloads": 6
+    },
+    {
+      "route": "/flaskBasedTests/outputNotAccessible/",
+      "successful_payloads": 6,
+      "total_payloads": 6
+    }
+  ]
+}

